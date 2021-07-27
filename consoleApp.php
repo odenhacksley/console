@@ -1,28 +1,30 @@
 <?php
 
-namespace App;
-
 require_once 'vendor/autoload.php';
 
 use Symfony\Component\Console\Application;
-
-//Класс Команды
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-class StringFormatter extends Command
+//Команда
+class StringFormatterCommand extends Command
 {
-    protected static $defaultName = 'command:strformat';
+    protected static $defaultName = 'strformat';
+
+    public static function output()
+    {
+        return 'im Alive';
+    }
 
     protected function configure(): void
     {   //Description and help
         $this->setDescription('Formates your string');
-        $this->setHelp('Command that formates your string');
 
-        //Required input parameter, string type
+        //Required input parameter
         $this->addArgument
         (
             'string_to_format',
@@ -30,27 +32,35 @@ class StringFormatter extends Command
             'The string to format'
         );
 
-        //Non required input option for another formatting
+        //Not required input option for another formatting
         $this->addOption
         (
             'another_format',
-            'fo',
+            'a',
             InputOption::VALUE_NONE,
             'Just an option to change a formatting',
-            1
         );
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $output->writeln('Введите строку:');
-        $stringToFormat = $input->getArgument('string_to_format');
-        $option = $input->getOption('another_format');
-        $output->writeln('Получена новая строка');
-        $output->writeln($this->stringFormatter($stringToFormat, $option));
+        try {
+            $stringToFormat = $input->getArgument('string_to_format');
+            if (empty($stringToFormat)) {
+                throw new InvalidArgumentException();
+            }
+            $stringToFormat = implode($stringToFormat);
+            $option = $input->getOption('another_format');
+            $output->writeln('Получена новая строка');
+            $output->writeln($this->stringFormatter($stringToFormat, $option));
+            return self::SUCCESS;
+        } catch (InvalidArgumentException $e) {
+            $output->writeln('Вы ввели пустую строку, попробуйте еще раз',);
+            return self::FAILURE;
+        }
     }
 
-    //This is my string
     private function stringFormatter($string, $option)
     {
         $stringArr = str_split($string);
@@ -77,5 +87,5 @@ class StringFormatter extends Command
 }
 
 $application = new Application();
+$application->add(new StringFormatterCommand());
 $application->run();
-$application->add(new StringFormatter());
